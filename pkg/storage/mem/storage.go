@@ -1,6 +1,7 @@
 package mem
 
 import (
+	"errors"
 	"sync/atomic"
 
 	"github.com/DmitriyVTitov/size"
@@ -29,19 +30,21 @@ func New(size int) storage.Interface {
 	return s
 }
 
-func (s *InMemoryStorage) Get(key uint32) (*storage.Object, bool) {
+func (s *InMemoryStorage) Get(key uint32) (*storage.Object, error) {
 	v, ok := s.hm.Get(key)
 	if !ok {
-		return nil, ok
+		return nil, errors.New("object not found")
 	}
 
-	return v.(*storage.Object), ok
+	return v.(*storage.Object), nil
 }
 
-func (s *InMemoryStorage) Set(key uint32, value *storage.Object) {
+func (s *InMemoryStorage) Set(key uint32, value *storage.Object) error {
 	s.hm.GetOrInsert(key, value)
 
 	go s.resize(key, value)
+
+	return nil
 }
 
 func (s *InMemoryStorage) resize(key uint32, value *storage.Object) {
