@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync/atomic"
 
-	"github.com/DmitriyVTitov/size"
 	"github.com/cornelk/hashmap"
 	"github.com/partyzanex/s3-http-proxy/pkg/pq"
 	"github.com/partyzanex/s3-http-proxy/pkg/storage"
@@ -48,7 +47,7 @@ func (s *InMemoryStorage) Set(key uint32, value *storage.Object) error {
 }
 
 func (s *InMemoryStorage) resize(key uint32, value *storage.Object) {
-	sz := uint64(size.Of(value))
+	sz := uint64(len(value.Body) + 32)
 
 	n := pq.Node{
 		Value:    key,

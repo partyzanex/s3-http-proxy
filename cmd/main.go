@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	"net/http/pprof"
 	"os"
 
 	"github.com/pkg/errors"
@@ -9,23 +11,42 @@ import (
 	"github.com/partyzanex/s3-http-proxy/internal/endpoint"
 	"github.com/partyzanex/s3-http-proxy/internal/server"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
 	app := cli.App{
 		Usage:  "S3 caching proxy",
 		Flags:  flags(),
+		Before: before,
 		Action: action,
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		log.Err(err)
 	}
 }
 
+func before(_ *cli.Context) error {
+	r := http.NewServeMux()
+	r.HandleFunc("/debug/pprof/", pprof.Index)
+	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	r.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	go func() {
+		err := http.ListenAndServe(":9081", r)
+		if err != nil {
+			log.Err(err)
+		}
+	}()
+
+	return nil
+}
+
 func action(ctx *cli.Context) error {
-	log.Infof("Listen %s", ctx.String("host"))
+	log.Printf("Listen %s", ctx.String("host"))
 
 	err := server.Run(ctx.Context, server.Config{
 		Hostname:            ctx.String("host"),
