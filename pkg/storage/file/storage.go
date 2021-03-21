@@ -144,7 +144,7 @@ func (s *InFileStorage) resize(key uint32, size uint64, mod int64) {
 	}
 	s.pq.Push(&n)
 
-	if uint64(s.size) > s.count+size {
+	if uint64(s.size) < s.count+size {
 		if node := s.pq.Next(); node != nil {
 			k := node.Value.(uint32)
 			s.Remove(k)

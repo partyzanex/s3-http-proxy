@@ -57,7 +57,7 @@ func (s *InMemoryStorage) resize(key uint32, value *storage.Object) {
 	}
 	s.pq.Push(&n)
 
-	if uint64(s.size) > s.count+sz {
+	if uint64(s.size) < s.count+sz {
 		if node := s.pq.Next(); node != nil {
 			k := node.Value.(uint32)
 			s.Remove(k)
